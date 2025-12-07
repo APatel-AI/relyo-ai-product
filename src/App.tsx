@@ -13,6 +13,7 @@ interface FamilyMember {
   id: string;
   name: string;
   relation: string;
+  image?: string;
 }
 
 function App() {
@@ -21,8 +22,8 @@ function App() {
 
   // Mock family members
   const [familyMembers] = useState<FamilyMember[]>([
-    { id: '1', name: 'Emma', relation: 'Daughter' },
-    { id: '2', name: 'Lucas', relation: 'Son' }
+    { id: '1', name: 'Emma', relation: 'Daughter', image: undefined },
+    { id: '2', name: 'Lucas', relation: 'Son', image: undefined }
   ]);
 
   // Mock calendar events

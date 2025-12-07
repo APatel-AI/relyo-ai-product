@@ -5,6 +5,7 @@ import { Input, Textarea } from './Input';
 import { Modal } from './Modal';
 import { Chip } from './Chip';
 import { EmptyState } from './EmptyState';
+import { Sidebar } from './Sidebar';
 
 interface HealthEvent {
   id: string;
@@ -18,13 +19,14 @@ interface HealthEvent {
 }
 
 interface HealthLogProps {
-  familyMembers: Array<{ id: string; name: string }>;
+  familyMembers: Array<{ id: string; name: string; image?: string }>;
   onBack: () => void;
 }
 
 export function HealthLog({ familyMembers, onBack }: HealthLogProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [selectedMember, setSelectedMember] = useState('all');
   const [healthEvents, setHealthEvents] = useState<HealthEvent[]>([
     {
       id: '1',
@@ -110,103 +112,107 @@ export function HealthLog({ familyMembers, onBack }: HealthLogProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-white rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div className="flex-1">
-            <h1 className="mb-2 text-gray-900">Health Event Log</h1>
-            <p className="text-gray-600">Track symptoms, medications, and health observations</p>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <Sidebar
+        currentScreen="health"
+        onNavigate={onBack}
+        familyMembers={familyMembers}
+        selectedMember={selectedMember}
+        onSelectMember={setSelectedMember}
+      />
+
+      {/* Main Content Area */}
+      <main className="flex-1 lg:ml-72">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8 mt-16 lg:mt-0">
+            <div>
+              <h1 className="mb-1 sm:mb-2 text-gray-900">Health Event Log</h1>
+              <p className="text-gray-600">Track symptoms, medications, and health observations</p>
+            </div>
+            <Button onClick={() => setShowAddModal(true)} variant="primary" className="w-full sm:w-auto">
+              <Plus className="w-4 h-4" />
+              Add Event
+            </Button>
           </div>
-          <Button onClick={() => setShowAddModal(true)} variant="primary">
-            <Plus className="w-4 h-4" />
-            Add Event
-          </Button>
-        </div>
 
-        {/* Filters */}
-        <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-2">
-          <Filter className="w-5 h-5 text-gray-400 flex-shrink-0" />
-          <Chip
-            label="All Family"
-            active={selectedFilter === 'all'}
-            onClick={() => setSelectedFilter('all')}
-          />
-          {familyMembers.map(member => (
+          {/* Filters */}
+          <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-2">
+            <Filter className="w-5 h-5 text-gray-400 flex-shrink-0" />
             <Chip
-              key={member.id}
-              label={member.name}
-              active={selectedFilter === member.name}
-              onClick={() => setSelectedFilter(member.name)}
+              label="All Family"
+              active={selectedFilter === 'all'}
+              onClick={() => setSelectedFilter('all')}
             />
-          ))}
-        </div>
+            {familyMembers.map(member => (
+              <Chip
+                key={member.id}
+                label={member.name}
+                active={selectedFilter === member.name}
+                onClick={() => setSelectedFilter(member.name)}
+              />
+            ))}
+          </div>
 
-        {/* Events List */}
-        {filteredEvents.length === 0 ? (
-          <EmptyState
-            icon={Heart}
-            title="No health events yet"
-            description="Start tracking symptoms, medications, and health observations"
-            actionLabel="Add First Event"
-            onAction={() => setShowAddModal(true)}
-          />
-        ) : (
-          <div className="space-y-4">
-            {filteredEvents.map((event) => {
-              const CategoryIcon = getCategoryIcon(event.category);
-              return (
-                <div
-                  key={event.id}
-                  className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <CategoryIcon className="w-6 h-6 text-blue-900" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4 mb-2">
-                        <div>
-                          <h3 className="text-gray-900 mb-1">{event.title}</h3>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-gray-500">
-                              {event.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {event.time}
-                            </span>
-                            <span className="text-gray-300">•</span>
-                            <span className="text-gray-500">{event.familyMember}</span>
+          {/* Events List */}
+          {filteredEvents.length === 0 ? (
+            <EmptyState
+              icon={Heart}
+              title="No health events yet"
+              description="Start tracking symptoms, medications, and health observations"
+              actionLabel="Add First Event"
+              onAction={() => setShowAddModal(true)}
+            />
+          ) : (
+            <div className="space-y-4">
+              {filteredEvents.map((event) => {
+                const CategoryIcon = getCategoryIcon(event.category);
+                return (
+                  <div
+                    key={event.id}
+                    className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <CategoryIcon className="w-6 h-6 text-blue-900" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                          <div>
+                            <h3 className="text-gray-900 mb-1">{event.title}</h3>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-gray-500">
+                                {event.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {event.time}
+                              </span>
+                              <span className="text-gray-300">•</span>
+                              <span className="text-gray-500">{event.familyMember}</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Chip
+                              label={event.category}
+                              variant="health"
+                            />
+                            <Chip
+                              label={event.severity}
+                              variant={
+                                event.severity === 'high' ? 'reminder' :
+                                event.severity === 'medium' ? 'appointment' : 'health'
+                              }
+                            />
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Chip
-                            label={event.category}
-                            variant="health"
-                          />
-                          <Chip
-                            label={event.severity}
-                            variant={
-                              event.severity === 'high' ? 'reminder' :
-                              event.severity === 'medium' ? 'appointment' : 'health'
-                            }
-                          />
-                        </div>
+                        <p className="text-gray-600">{event.description}</p>
                       </div>
-                      <p className="text-gray-600">{event.description}</p>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </main>
 
       {/* Add Event Modal */}
       <Modal

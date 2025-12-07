@@ -5,6 +5,7 @@ import { Input, Textarea } from './Input';
 import { Modal } from './Modal';
 import { Chip } from './Chip';
 import { EmptyState } from './EmptyState';
+import { Sidebar } from './Sidebar';
 
 interface Appointment {
   id: string;
@@ -18,12 +19,13 @@ interface Appointment {
 }
 
 interface AppointmentsProps {
-  familyMembers: Array<{ id: string; name: string }>;
+  familyMembers: Array<{ id: string; name: string; image?: string }>;
   onBack: () => void;
 }
 
 export function Appointments({ familyMembers, onBack }: AppointmentsProps) {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedMember, setSelectedMember] = useState('all');
   const [appointments, setAppointments] = useState<Appointment[]>([
     {
       id: '1',
@@ -104,89 +106,93 @@ export function Appointments({ familyMembers, onBack }: AppointmentsProps) {
   const pastAppointments = appointments.filter(a => a.date < new Date());
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-white rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div className="flex-1">
-            <h1 className="mb-2 text-gray-900">Appointments</h1>
-            <p className="text-gray-600">Manage upcoming visits and meetings</p>
-          </div>
-          <Button onClick={() => setShowAddModal(true)} variant="primary">
-            <Plus className="w-4 h-4" />
-            Add Appointment
-          </Button>
-        </div>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <Sidebar
+        currentScreen="appointments"
+        onNavigate={onBack}
+        familyMembers={familyMembers}
+        selectedMember={selectedMember}
+        onSelectMember={setSelectedMember}
+      />
 
-        {/* Mini Calendar Preview */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-gray-900">This Month</h2>
-            <span className="text-gray-500">{upcomingAppointments.length} upcoming</span>
+      {/* Main Content Area */}
+      <main className="flex-1 lg:ml-72">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8 mt-16 lg:mt-0">
+            <div>
+              <h1 className="mb-1 sm:mb-2 text-gray-900">Appointments</h1>
+              <p className="text-gray-600">Manage upcoming visits and meetings</p>
+            </div>
+            <Button onClick={() => setShowAddModal(true)} variant="primary" className="w-full sm:w-auto">
+              <Plus className="w-4 h-4" />
+              Add Appointment
+            </Button>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {upcomingAppointments.slice(0, 5).map(apt => (
-              <div
-                key={apt.id}
-                className="flex-shrink-0 w-32 bg-gray-50 rounded-xl p-3"
-              >
-                <div className="text-gray-900 mb-1">
-                  {apt.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+
+          {/* Mini Calendar Preview */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-gray-900">This Month</h2>
+              <span className="text-gray-500">{upcomingAppointments.length} upcoming</span>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {upcomingAppointments.slice(0, 5).map(apt => (
+                <div
+                  key={apt.id}
+                  className="flex-shrink-0 w-32 bg-gray-50 rounded-xl p-3"
+                >
+                  <div className="text-gray-900 mb-1">
+                    {apt.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </div>
+                  <div className="text-gray-600 truncate">{apt.time}</div>
                 </div>
-                <div className="text-gray-600 truncate">{apt.time}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Upcoming Appointments */}
-        <div className="mb-8">
-          <h2 className="mb-4 text-gray-900">Upcoming</h2>
-          {upcomingAppointments.length === 0 ? (
-            <EmptyState
-              icon={CalendarIcon}
-              title="No upcoming appointments"
-              description="Schedule your next appointment to stay organized"
-              actionLabel="Add Appointment"
-              onAction={() => setShowAddModal(true)}
-            />
-          ) : (
-            <div className="space-y-4">
-              {upcomingAppointments.map(appointment => (
-                <AppointmentCard
-                  key={appointment.id}
-                  appointment={appointment}
-                  getCategoryColor={getCategoryColor}
-                />
               ))}
+            </div>
+          </div>
+
+          {/* Upcoming Appointments */}
+          <div className="mb-8">
+            <h2 className="mb-4 text-gray-900">Upcoming</h2>
+            {upcomingAppointments.length === 0 ? (
+              <EmptyState
+                icon={CalendarIcon}
+                title="No upcoming appointments"
+                description="Schedule your next appointment to stay organized"
+                actionLabel="Add Appointment"
+                onAction={() => setShowAddModal(true)}
+              />
+            ) : (
+              <div className="space-y-4">
+                {upcomingAppointments.map(appointment => (
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                    getCategoryColor={getCategoryColor}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Past Appointments */}
+          {pastAppointments.length > 0 && (
+            <div>
+              <h2 className="mb-4 text-gray-900">Past</h2>
+              <div className="space-y-4 opacity-60">
+                {pastAppointments.map(appointment => (
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                    getCategoryColor={getCategoryColor}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>
-
-        {/* Past Appointments */}
-        {pastAppointments.length > 0 && (
-          <div>
-            <h2 className="mb-4 text-gray-900">Past</h2>
-            <div className="space-y-4 opacity-60">
-              {pastAppointments.map(appointment => (
-                <AppointmentCard
-                  key={appointment.id}
-                  appointment={appointment}
-                  getCategoryColor={getCategoryColor}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      </main>
 
       {/* Add Appointment Modal */}
       <Modal

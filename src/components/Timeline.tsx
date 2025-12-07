@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Heart, Calendar, Bell, MessageSquare, Filter } from 'lucide-react';
 import { Chip } from './Chip';
 import { EmptyState } from './EmptyState';
+import { Sidebar } from './Sidebar';
 
 interface TimelineEntry {
   id: string;
@@ -14,13 +15,14 @@ interface TimelineEntry {
 }
 
 interface TimelineProps {
-  familyMembers: Array<{ id: string; name: string }>;
+  familyMembers: Array<{ id: string; name: string; image?: string }>;
   onBack: () => void;
 }
 
 export function Timeline({ familyMembers, onBack }: TimelineProps) {
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [selectedMember, setSelectedMember] = useState('all');
 
   const [entries] = useState<TimelineEntry[]>([
     {
@@ -120,141 +122,143 @@ export function Timeline({ familyMembers, onBack }: TimelineProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-white rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div className="flex-1">
-            <h1 className="mb-2 text-gray-900">Timeline</h1>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <Sidebar
+        currentScreen="timeline"
+        onNavigate={onBack}
+        familyMembers={familyMembers}
+        selectedMember={selectedMember}
+        onSelectMember={setSelectedMember}
+      />
+
+      {/* Main Content Area */}
+      <main className="flex-1 lg:ml-72">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+          {/* Header */}
+          <div className="mb-6 sm:mb-8 mt-16 lg:mt-0">
+            <h1 className="mb-1 sm:mb-2 text-gray-900">Timeline</h1>
             <p className="text-gray-600">Complete history of all activities</p>
           </div>
-        </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
-          <div className="mb-4">
-            <label className="block mb-2 text-gray-700">Family Member</label>
-            <div className="flex items-center gap-2 overflow-x-auto pb-2">
-              <Chip
-                label="All"
-                active={selectedFilter === 'all'}
-                onClick={() => setSelectedFilter('all')}
-              />
-              {familyMembers.map(member => (
+          {/* Filters */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+            <div className="mb-4">
+              <label className="block mb-2 text-gray-700">Family Member</label>
+              <div className="flex items-center gap-2 overflow-x-auto pb-2">
                 <Chip
-                  key={member.id}
-                  label={member.name}
-                  active={selectedFilter === member.name}
-                  onClick={() => setSelectedFilter(member.name)}
+                  label="All"
+                  active={selectedFilter === 'all'}
+                  onClick={() => setSelectedFilter('all')}
                 />
-              ))}
+                {familyMembers.map(member => (
+                  <Chip
+                    key={member.id}
+                    label={member.name}
+                    active={selectedFilter === member.name}
+                    onClick={() => setSelectedFilter(member.name)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block mb-2 text-gray-700">Type</label>
+              <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                <Chip
+                  label="All"
+                  active={selectedType === 'all'}
+                  onClick={() => setSelectedType('all')}
+                />
+                <Chip
+                  label="Health"
+                  active={selectedType === 'health'}
+                  onClick={() => setSelectedType('health')}
+                  variant="health"
+                />
+                <Chip
+                  label="Appointments"
+                  active={selectedType === 'appointment'}
+                  onClick={() => setSelectedType('appointment')}
+                  variant="appointment"
+                />
+                <Chip
+                  label="Reminders"
+                  active={selectedType === 'reminder'}
+                  onClick={() => setSelectedType('reminder')}
+                  variant="reminder"
+                />
+                <Chip
+                  label="AI Scripts"
+                  active={selectedType === 'script'}
+                  onClick={() => setSelectedType('script')}
+                />
+              </div>
             </div>
           </div>
 
-          <div>
-            <label className="block mb-2 text-gray-700">Type</label>
-            <div className="flex items-center gap-2 overflow-x-auto pb-2">
-              <Chip
-                label="All"
-                active={selectedType === 'all'}
-                onClick={() => setSelectedType('all')}
-              />
-              <Chip
-                label="Health"
-                active={selectedType === 'health'}
-                onClick={() => setSelectedType('health')}
-                variant="health"
-              />
-              <Chip
-                label="Appointments"
-                active={selectedType === 'appointment'}
-                onClick={() => setSelectedType('appointment')}
-                variant="appointment"
-              />
-              <Chip
-                label="Reminders"
-                active={selectedType === 'reminder'}
-                onClick={() => setSelectedType('reminder')}
-                variant="reminder"
-              />
-              <Chip
-                label="AI Scripts"
-                active={selectedType === 'script'}
-                onClick={() => setSelectedType('script')}
-              />
-            </div>
-          </div>
-        </div>
+          {/* Timeline */}
+          {filteredEntries.length === 0 ? (
+            <EmptyState
+              icon={Calendar}
+              title="No timeline entries"
+              description="Your activity history will appear here"
+            />
+          ) : (
+            <div className="space-y-8">
+              {Object.entries(groupedByDate).map(([date, dateEntries]) => (
+                <div key={date}>
+                  <div className="sticky top-0 bg-gray-50 py-2 mb-4 z-10">
+                    <h3 className="text-gray-900">{date}</h3>
+                  </div>
+                  <div className="relative">
+                    {/* Timeline line */}
+                    <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" />
 
-        {/* Timeline */}
-        {filteredEntries.length === 0 ? (
-          <EmptyState
-            icon={Calendar}
-            title="No timeline entries"
-            description="Your activity history will appear here"
-          />
-        ) : (
-          <div className="space-y-8">
-            {Object.entries(groupedByDate).map(([date, dateEntries]) => (
-              <div key={date}>
-                <div className="sticky top-0 bg-gray-50 py-2 mb-4 z-10">
-                  <h3 className="text-gray-900">{date}</h3>
-                </div>
-                <div className="relative">
-                  {/* Timeline line */}
-                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" />
-
-                  <div className="space-y-6">
-                    {dateEntries.map((entry, index) => {
-                      const Icon = getIcon(entry.type);
-                      const color = getColor(entry.type);
-                      return (
-                        <div key={entry.id} className="relative flex gap-6">
-                          {/* Timeline dot */}
-                          <div className={`flex-shrink-0 w-12 h-12 rounded-full ${color} border-2 flex items-center justify-center z-10`}>
-                            <Icon className="w-5 h-5" />
-                          </div>
-
-                          {/* Content card */}
-                          <div className="flex-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all -mt-1">
-                            <div className="flex items-start justify-between gap-4 mb-2">
-                              <div className="flex-1">
-                                <h3 className="text-gray-900 mb-1">{entry.title}</h3>
-                                <div className="flex items-center gap-2 text-gray-500">
-                                  <span>{entry.time}</span>
-                                  <span className="text-gray-300">•</span>
-                                  <span>{entry.familyMember}</span>
-                                </div>
-                              </div>
-                              <Chip
-                                label={entry.type.charAt(0).toUpperCase() + entry.type.slice(1)}
-                                variant={
-                                  entry.type === 'health' ? 'health' :
-                                  entry.type === 'appointment' ? 'appointment' :
-                                  entry.type === 'reminder' ? 'reminder' : 'default'
-                                }
-                              />
+                    <div className="space-y-6">
+                      {dateEntries.map((entry, index) => {
+                        const Icon = getIcon(entry.type);
+                        const color = getColor(entry.type);
+                        return (
+                          <div key={entry.id} className="relative flex gap-6">
+                            {/* Timeline dot */}
+                            <div className={`flex-shrink-0 w-12 h-12 rounded-full ${color} border-2 flex items-center justify-center z-10`}>
+                              <Icon className="w-5 h-5" />
                             </div>
-                            <p className="text-gray-600">{entry.description}</p>
+
+                            {/* Content card */}
+                            <div className="flex-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all -mt-1">
+                              <div className="flex items-start justify-between gap-4 mb-2">
+                                <div className="flex-1">
+                                  <h3 className="text-gray-900 mb-1">{entry.title}</h3>
+                                  <div className="flex items-center gap-2 text-gray-500">
+                                    <span>{entry.time}</span>
+                                    <span className="text-gray-300">•</span>
+                                    <span>{entry.familyMember}</span>
+                                  </div>
+                                </div>
+                                <Chip
+                                  label={entry.type.charAt(0).toUpperCase() + entry.type.slice(1)}
+                                  variant={
+                                    entry.type === 'health' ? 'health' :
+                                    entry.type === 'appointment' ? 'appointment' :
+                                    entry.type === 'reminder' ? 'reminder' : 'default'
+                                  }
+                                />
+                              </div>
+                              <p className="text-gray-600">{entry.description}</p>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

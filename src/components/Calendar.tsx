@@ -61,7 +61,7 @@ export function Calendar({ events, selectedDate, onDateSelect, onMonthChange }: 
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6 sm:mb-8">
         <h2 className="text-gray-900">{monthName}</h2>
         <div className="flex gap-2">
           <button
@@ -79,7 +79,8 @@ export function Calendar({ events, selectedDate, onDateSelect, onMonthChange }: 
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2 mb-3">
+      {/* Desktop Day Headers */}
+      <div className="hidden sm:grid grid-cols-7 gap-2 mb-3">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
           <div key={day} className="text-center py-2 text-gray-500">
             {day}
@@ -87,7 +88,17 @@ export function Calendar({ events, selectedDate, onDateSelect, onMonthChange }: 
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      {/* Mobile Day Headers - Abbreviated */}
+      <div className="grid sm:hidden grid-cols-7 gap-1 mb-3">
+        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+          <div key={`${day}-${idx}`} className="text-center py-2 text-gray-500">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Calendar Grid */}
+      <div className="hidden sm:grid grid-cols-7 gap-2">
         {Array.from({ length: startingDayOfWeek }).map((_, index) => (
           <div key={`empty-${index}`} className="aspect-square" />
         ))}
@@ -133,6 +144,54 @@ export function Calendar({ events, selectedDate, onDateSelect, onMonthChange }: 
                     </div>
                   )}
                 </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Mobile Calendar Grid - Compact View */}
+      <div className="grid sm:hidden grid-cols-7 gap-1">
+        {Array.from({ length: startingDayOfWeek }).map((_, index) => (
+          <div key={`empty-${index}`} className="aspect-square" />
+        ))}
+        {Array.from({ length: daysInMonth }).map((_, index) => {
+          const day = index + 1;
+          const date = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day);
+          const dayEvents = getEventsForDate(date);
+          const hasEvents = dayEvents.length > 0;
+
+          return (
+            <button
+              key={day}
+              onClick={() => onDateSelect(date)}
+              className={`aspect-square p-1 rounded-lg border transition-all relative ${
+                isSelected(date)
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : isToday(date)
+                  ? 'bg-gray-50 border-gray-900'
+                  : 'bg-white border-gray-200 active:bg-gray-50'
+              }`}
+            >
+              <div className="h-full flex flex-col items-center justify-center">
+                <span className={`text-sm ${isSelected(date) ? 'text-white' : 'text-gray-900'}`}>
+                  {day}
+                </span>
+                {hasEvents && (
+                  <div className="flex gap-0.5 mt-1">
+                    {dayEvents.slice(0, 3).map(event => (
+                      <div
+                        key={event.id}
+                        className={`w-1 h-1 rounded-full ${
+                          isSelected(date) ? 'bg-white' :
+                          event.type === 'health' ? 'bg-blue-500' :
+                          event.type === 'appointment' ? 'bg-yellow-500' :
+                          'bg-purple-500'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </button>
           );
